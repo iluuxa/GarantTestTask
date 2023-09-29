@@ -1,12 +1,10 @@
 <?php
 
 use App\Application;
-use \App\controllers\ClientController;
-use Illuminate\Container\Container;
+use \App\Controllers\ClientController;
+use App\Repositories\ClientRepository;
+use App\Services\ClientValidationService;
 use Klein\Request;
-function container(): Container{
-    return Container::getInstance();
-}
 error_reporting(E_ALL);
 ini_set('display_errors', true);
 define('APP_DIR', dirname(__DIR__));
@@ -15,9 +13,9 @@ require_once APP_DIR . '/bootstrap.php';
 
 $klein = new \Klein\Klein();
 $klein->with('/api/v1/client', function () use($klein){
-    $controller = new ClientController(new \App\repositories\ClientRepository());
+    $controller = new ClientController(new ClientRepository(), new ClientValidationService());
     $klein->respond('POST','',[$controller,'addClient']);
-    $klein->respond('GET','/{id}',[$controller,'getClient']);
+    $klein->respond('GET','/[i:id]',[$controller,'getClient']);
     $klein->respond('GET', '', [$controller,'getList']);
 });
 

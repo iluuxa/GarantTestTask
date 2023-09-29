@@ -2,8 +2,8 @@
 
 namespace App;
 
-use App\controllers\ClientController;
-use App\repositories\ClientRepository;
+use App\Controllers\ClientController;
+use App\Repositories\ClientRepository;
 use Klein\Response;
 use \PDO;
 
