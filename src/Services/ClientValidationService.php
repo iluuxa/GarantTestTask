@@ -15,12 +15,15 @@ class ClientValidationService
      * @throws ValidationException
      */
     public function validateClient(Request $request):array{
-        $array = json_decode($request->body(),flags:JSON_OBJECT_AS_ARRAY);
+        $array = json_decode($request->body(),true);
         $result = [];
         if(isset($array['name'])){
             $result['name'] = $array['name'];
         }
         if(!empty($array['phone'])){
+            if($array['phone'][0]==8){
+                $array['phone'] = substr_replace($array['phone'],'+7',0,1);
+            }
             /*https://habr.com/ru/articles/279751/*/
             $phoneUtil = PhoneNumberUtil::getInstance();
             $number = $phoneUtil->parse($array['phone']);

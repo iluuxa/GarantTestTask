@@ -2,10 +2,13 @@
 
 use App\Application;
 use \App\Controllers\ClientController;
+use App\Controllers\ContractController;
 use App\Repositories\ClientRepository;
+use App\Repositories\ContractRepository;
 use App\Services\ClientValidationService;
+use App\Services\ContractValidationService;
 use Klein\Request;
-error_reporting(E_ALL);
+error_reporting(E_ERROR);
 ini_set('display_errors', true);
 define('APP_DIR', dirname(__DIR__));
 require_once APP_DIR . '/vendor/autoload.php';
@@ -17,6 +20,11 @@ $klein->with('/api/v1/client', function () use($klein){
     $klein->respond('POST','',[$controller,'addClient']);
     $klein->respond('GET','/[i:id]',[$controller,'getClient']);
     $klein->respond('GET', '', [$controller,'getList']);
+    $klein->respond('GET','/export',[$controller,'exportClients']);
+});
+$klein->with('/api/v1/contract', function () use($klein){
+    $controller = new ContractController(new ContractRepository(), new ContractValidationService());
+    $klein->respond('POST','/create',[$controller,'addContract']);
 });
 
 /*try {

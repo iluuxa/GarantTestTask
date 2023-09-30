@@ -3,9 +3,12 @@
 namespace App\Controllers;
 
 use App\Entities\Client;
+use App\Exceptions\ValidationException;
 use App\Repositories\ClientRepository;
 use App\Services\ClientValidationService;
+use Klein\Request;
 use Klein\Response;
+use libphonenumber\NumberParseException;
 
 class ClientController extends Controller
 {
@@ -18,15 +21,19 @@ class ClientController extends Controller
     {
     }
 
-    public function getList(): Response
+    public function getList(Request $request): Response
     {
-        $clients = $this->clientRepository->getGroupedClientList();
+        $sort = $request->param('sort',1);
+        $by = $request->param('by','id');
+        $limit = $request->param('limit',1000);
+        $clients = $this->clientRepository->getGroupedClientList($sort,$by,$limit);
         $result = [];
         /**
          * Массив сгруппирован по id клиента. Необходимо сгруппировать его по остальным полям клиента, а также выделить
          * контракты в массив-свойство клиента. Для этого написан находящийся ниже вложенный цикл.
          */
         foreach ($clients as $id => $client) {
+            $result[$id]['id'] = $id;
             $result[$id]['name'] = $client[0]['name'];
             $result[$id]['phone'] = $client[0]['phone'];
             $result[$id]['taxpayer_number'] = $client[0]['taxpayer_number'];
@@ -47,7 +54,7 @@ class ClientController extends Controller
         return new Response(json_encode($result, JSON_UNESCAPED_UNICODE), 200);
     }
 
-    public function getClient($request): Response
+    public function getClient(Request $request): Response
     {
         $client = $this->clientRepository->getGroupedClientById($request->id);
         $result = [];
@@ -72,7 +79,7 @@ class ClientController extends Controller
         return new Response(json_encode($result, JSON_UNESCAPED_UNICODE), 200);
     }
 
-    public function addClient($request): Response
+    public function addClient(Request $request): Response
     {
         try {
             return new Response(json_encode(
@@ -81,8 +88,21 @@ class ClientController extends Controller
                     ), JSON_UNESCAPED_UNICODE
                 ), 200
             );
-        }catch (\Exception $e){
-            return new Response(json_encode($e, JSON_UNESCAPED_UNICODE));
+        }catch (ValidationException|NumberParseException $e){
+            return new Response(json_encode($e->getMessage(), JSON_UNESCAPED_UNICODE),$e->getCode());
         }
+    }
+
+    public function exportClients():Response{
+        $clients = $this->clientRepository->getListClientsOnly();
+        $out = fopen('php://output', 'w');
+        foreach ($clients as $fields) {
+            fputcsv($out, $fields);
+        }
+        fclose($out);
+        $response = new Response();
+        $response->header('Content-Type','application/octet-stream');
+        $response->header('Content-disposition','attachment; filename=clients.csv');
+        return $response;
     }
 }
