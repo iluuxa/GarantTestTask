@@ -33,7 +33,9 @@ class ClientValidationService
             $result['phone'] = $phoneUtil->format($number, PhoneNumberFormat::E164);
         }
         if(isset($array['taxpayer_number'])){
-            if(!ctype_digit($array['taxpayer_number'])||(mb_strlen($array['taxpayer_number'])>12)||(mb_strlen($array['taxpayer_number'])<10)){
+            if(!ctype_digit($array['taxpayer_number'])||
+                !((mb_strlen($array['taxpayer_number'])==12)||(mb_strlen($array['taxpayer_number'])==10))
+            ){
                 throw new ValidationException('Invalid taxpayer number: '.$array['taxpayer_number']);
             }
             $result['taxpayer_number'] = $array['taxpayer_number'];

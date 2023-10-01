@@ -3,10 +3,13 @@
 use App\Application;
 use \App\Controllers\ClientController;
 use App\Controllers\ContractController;
+use App\Controllers\EmployeeController;
 use App\Repositories\ClientRepository;
 use App\Repositories\ContractRepository;
+use App\Repositories\EmployeeRepository;
 use App\Services\ClientValidationService;
 use App\Services\ContractValidationService;
+use App\Services\EmployeeValidationService;
 use Klein\Request;
 error_reporting(E_ERROR);
 ini_set('display_errors', true);
@@ -25,6 +28,12 @@ $klein->with('/api/v1/client', function () use($klein){
 $klein->with('/api/v1/contract', function () use($klein){
     $controller = new ContractController(new ContractRepository(), new ContractValidationService());
     $klein->respond('POST','/create',[$controller,'addContract']);
+    $klein->respond('POST','/update',[$controller,'updateContract']);
+    $klein->respond('POST','/delete',[$controller,'deleteContract']);
+});
+$klein->with( '/api/v1/employee', function () use ($klein){
+    $controller = new EmployeeController(new EmployeeRepository(),new EmployeeValidationService());
+    $klein->respond('POST','',[$controller,'addEmployee']);
 });
 
 /*try {

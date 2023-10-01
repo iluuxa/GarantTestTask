@@ -51,7 +51,7 @@ class ClientController extends Controller
                 }
             }
         }
-        return new Response(json_encode($result, JSON_UNESCAPED_UNICODE), 200);
+        return $this->sendJSON($result);
     }
 
     public function getClient(Request $request): Response
@@ -76,20 +76,15 @@ class ClientController extends Controller
                 }
             }
         }
-        return new Response(json_encode($result, JSON_UNESCAPED_UNICODE), 200);
+        return $this->sendJSON($result);
     }
 
     public function addClient(Request $request): Response
     {
         try {
-            return new Response(json_encode(
-                    $this->clientRepository->addClient(
-                        $this->clientValidationService->validateClient($request)
-                    ), JSON_UNESCAPED_UNICODE
-                ), 200
-            );
+            return $this->sendJSON($this->clientRepository->addClient($this->clientValidationService->validateClient($request)));
         }catch (ValidationException|NumberParseException $e){
-            return new Response(json_encode($e->getMessage(), JSON_UNESCAPED_UNICODE),$e->getCode());
+            return $this->sendJSON($e->getMessage(),$e->getCode());
         }
     }
 

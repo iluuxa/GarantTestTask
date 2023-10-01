@@ -15,10 +15,6 @@ class Application
     {
         return self::$connection;
     }
-    public static function run():Response
-    {
-        return (new ClientController(new ClientRepository()))->getList();
-    }
 
     public static function setConnection(PDO $connection): void
     {
