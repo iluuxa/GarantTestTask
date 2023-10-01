@@ -2,7 +2,6 @@
 
 namespace App\Controllers;
 
-use App\Entities\Client;
 use App\Exceptions\ValidationException;
 use App\Repositories\ClientRepository;
 use App\Services\ClientValidationService;
@@ -14,7 +13,8 @@ class ClientController extends Controller
 {
 
     /**
-     * @param $clientRepository
+     * @param ClientRepository $clientRepository
+     * @param ClientValidationService $clientValidationService
      */
     public function __construct(private readonly ClientRepository        $clientRepository,
                                 private readonly ClientValidationService $clientValidationService)
@@ -23,10 +23,11 @@ class ClientController extends Controller
 
     public function getList(Request $request): Response
     {
-        $sort = $request->param('sort',1);
-        $by = $request->param('by','id');
-        $limit = $request->param('limit',1000);
-        $clients = $this->clientRepository->getGroupedClientList($sort,$by,$limit);
+        $sort = $request->param('sort', 1);
+        $by = $request->param('by', 'id');
+        $limit = $request->param('limit', 1000);
+        $params = $this->clientValidationService->validateGetParams(['sort' => $sort, 'by' => $by, 'limit' => $limit]);
+        $clients = $this->clientRepository->getGroupedClientList($params['sort'], $params['by'], $params['limit']);
         $result = [];
         /**
          * Массив сгруппирован по id клиента. Необходимо сгруппировать его по остальным полям клиента, а также выделить
@@ -37,8 +38,7 @@ class ClientController extends Controller
             $result[$id]['name'] = $client[0]['name'];
             $result[$id]['phone'] = $client[0]['phone'];
             $result[$id]['taxpayer_number'] = $client[0]['taxpayer_number'];
-            foreach ($client as $key => $contract) {
-                ;
+            foreach ($client as $contract) {
                 if ($contract['contract_id'] !== null) {
                     $result[$id]['contracts'][$contract['contract_id']]['id'] = $contract['contract_id'];
                     $result[$id]['contracts'][$contract['contract_id']]['start'] = $contract['start'];
@@ -56,14 +56,19 @@ class ClientController extends Controller
 
     public function getClient(Request $request): Response
     {
-        $client = $this->clientRepository->getGroupedClientById($request->id);
+        try {
+            $id = $this->clientValidationService->validateClientId($request);
+        } catch (ValidationException $e) {
+            return $this->sendJSON($e->getMessage(), $e->getCode());
+        }
+        $client = $this->clientRepository->getGroupedClientById($id);
         $result = [];
         if (!empty($client)) {
-            $result['id'] = $request->id;
-            $result['name'] = $client[$request->id][0]['name'];
-            $result['phone'] = $client[$request->id][0]['phone'];
-            $result['taxpayer_number'] = $client[$request->id][0]['taxpayer_number'];
-            foreach ($client[$request->id] as $key => $contract) {
+            $result['id'] = $id;
+            $result['name'] = $client[$id][0]['name'];
+            $result['phone'] = $client[$id][0]['phone'];
+            $result['taxpayer_number'] = $client[$id][0]['taxpayer_number'];
+            foreach ($client[$id] as $contract) {
                 if ($contract['contract_id'] !== null) {
                     $result['contracts'][$contract['contract_id']]['id'] = $contract['contract_id'];
                     $result['contracts'][$contract['contract_id']]['start'] = $contract['start'];
@@ -83,12 +88,13 @@ class ClientController extends Controller
     {
         try {
             return $this->sendJSON($this->clientRepository->addClient($this->clientValidationService->validateClient($request)));
-        }catch (ValidationException|NumberParseException $e){
-            return $this->sendJSON($e->getMessage(),$e->getCode());
+        } catch (ValidationException|NumberParseException $e) {
+            return $this->sendJSON($e->getMessage(), $e->getCode());
         }
     }
 
-    public function exportClients():Response{
+    public function exportClients(): Response
+    {
         $clients = $this->clientRepository->getListClientsOnly();
         $out = fopen('php://output', 'w');
         foreach ($clients as $fields) {
@@ -96,8 +102,13 @@ class ClientController extends Controller
         }
         fclose($out);
         $response = new Response();
-        $response->header('Content-Type','application/octet-stream');
-        $response->header('Content-disposition','attachment; filename=clients.csv');
+        $response->header('Content-Type', 'application/octet-stream');
+        $response->header('Content-disposition', 'attachment; filename=clients.csv');
         return $response;
+    }
+
+    public function getForm(): Response
+    {
+        return new Response($this->renderTemplate('index.html'));
     }
 }

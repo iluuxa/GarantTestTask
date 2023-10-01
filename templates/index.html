@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+
+</head>
+<body>
+<form id="form" method="post" name="form" action="/api/v1/client">
+    <div class="block">
+        <label for="fieldName">Имя</label>
+        <input id="fieldName" name="name" type="text" placeholder="Иванов Иван Иванович">
+    </div>
+    <div class="block">
+        <label for="fieldPhone">Телефон</label>
+        <input id="fieldPhone" name="phone" type="tel" placeholder="+79999999999">
+    </div>
+    <div class="block">
+        <label for="fieldINN">ИНН</label>
+        <input id="fieldINN" name="taxpayer_number" type="number" placeholder="770000000000">
+    </div>
+    <div class="block">
+        <button type="submit" id="submit">
+            Зарегистрировать клиента
+        </button>
+    </div>
+</form>
+
+</body>
+<script>
+    $("#form").submit(function (e) {
+        const mydata = JSON.stringify(Object.fromEntries(new FormData(document.getElementById('form'))));
+        $.ajax({
+            url: "/api/v1/client",
+            contentType: "application/json",
+            dataType: "json",
+            processData: false,
+            type: "POST",
+            data: mydata,
+            success: function () {
+            }
+        });
+
+    });
+    /*function onSubmit() {
+        $.ajax({
+            type: "POST",
+            url: "/api/v1/client",
+            data: JSON.stringify(new FormData(document.getElementById("form"))),
+            dataType: "json",
+            success: function () {
+            },
+            processData: false,
+            contentType:"application/json; charset=utf-8",
+        });
+    }*/
+</script>
+</html>

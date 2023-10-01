@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Exceptions\ValidationException;
 use Klein\Request;
 
-class EmployeeValidationService
+class EmployeeValidationService extends ValidationService
 {
     /**
      * @throws ValidationException
@@ -14,26 +14,53 @@ class EmployeeValidationService
     {
         $params = json_decode($request->body(), true);
         $result = [];
-        $dateFormat = 'Y-m-d';
         if (isset($params['name'])) {
             $result['name'] = $params['name'];
         }
         if (isset($params['birth_date'])) {
-            $result['birth_date'] = \DateTime::createFromFormat($dateFormat, $params['birth_date']);
-            if(!$result['birth_date']){
-                throw new ValidationException('Некорректная дата: ' . $params['birth_date'] . '. Корректный формат даты: ГГГГ-ММ-ДД.');
-            }
-            $result['birth_date']=$result['birth_date']->setTime(0,0,0,0);
-            if ($result['birth_date']->format($dateFormat) == $params['birth_date']) {
-                throw new ValidationException('Некорректная дата: ' . $params['birth_date'] . '. Корректный формат даты: ГГГГ-ММ-ДД.');
-            }
+            $result['birth_date'] = $this->validateDate($params['birth_date'])->format(DATE_FORMAT);
         }
-        if (isset($params['salary'])){
-            if(!is_numeric($params['salary'])||$params['salary']<0){
-                throw new ValidationException('Неверно указана зарплата: '.$params['salary']);
+        if (isset($params['salary'])) {
+            if (!is_numeric($params['salary']) || $params['salary'] < 0) {
+                throw new ValidationException('Неверно указана зарплата: ' . $params['salary']);
             }
-            $result['salary']=$params['salary'];
+            $result['salary'] = $params['salary'];
         }
         return $result;
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    public function validateReport(Request $request): array
+    {
+        $params = json_decode($request->body(), true);
+        if (isset($params['start'])) {
+            $result['start'] = $this->validateDate($params['start']);
+        } else {
+            throw new ValidationException('Нет даты начала периода (start)');
+        }
+        if (isset($params['end'])) {
+            $result['end'] = $this->validateDate($params['end']);
+        } else {
+            throw new ValidationException('Нет даты конца периода (end)');
+        }
+        if ($result['end'] < $result['start']) {
+            throw new ValidationException('Дата начала не может быть позже даты конца периода');
+        }
+        return $result;
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    public function validateEmployeeId(Request $request): int
+    {
+        $params = json_decode($request->body(), true);
+        if (intval($params['id']) > 0) {
+            return intval($params['id']);
+        } else {
+            throw new ValidationException('Неверный id сотрудника');
+        }
     }
 }

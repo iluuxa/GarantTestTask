@@ -54,4 +54,9 @@ class ContractController extends Controller
             return $this->sendJSON(['message' => 'Неверно указан id'], 401);
         }
     }
+
+    public function getList(): Response
+    {
+        return $this->sendJSON($this->contractRepository->getList());
+    }
 }
