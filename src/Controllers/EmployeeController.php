@@ -72,6 +72,11 @@ class EmployeeController extends Controller
         }
         $spreadsheet = new Spreadsheet();
         $activeWorksheet = $spreadsheet->getActiveSheet();
+        $activeWorksheet->setCellValue('A1','id');
+        $activeWorksheet->setCellValue('B1','ФИО');
+        $activeWorksheet->setCellValue('C1','Зарплата');
+        $activeWorksheet->setCellValue('D1','Сумма контрактов');
+        $activeWorksheet->setCellValue('E1','Кол-во контрактов');
         $activeWorksheet->fromArray($result, '', 'A2', true);
 
         $writer = new Xlsx($spreadsheet);
