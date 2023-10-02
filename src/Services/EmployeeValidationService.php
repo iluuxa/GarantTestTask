@@ -34,7 +34,7 @@ class EmployeeValidationService extends ValidationService
      */
     public function validateReport(Request $request): array
     {
-        $params = json_decode($request->body(), true);
+        $params = ['start'=>$request->paramsGet()->get('start'),'end'=>$request->paramsGet()->get('end')];
         if (isset($params['start'])) {
             $result['start'] = $this->validateDate($params['start']);
         } else {

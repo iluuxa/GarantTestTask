@@ -37,7 +37,7 @@ $klein->with('/api/v1/contract', function () use ($klein) {
 $klein->with('/api/v1/employee', function () use ($klein) {
     $controller = new EmployeeController(new EmployeeRepository(), new EmployeeValidationService());
     $klein->respond('POST', '', [$controller, 'addEmployee']);
-    $klein->respond('POST', '/report', [$controller, 'getReport']);
+    $klein->respond('GET', '/report', [$controller, 'getReport']);
     $klein->respond('POST', '/fire', [$controller, 'fireEmployee']);
 });
 
